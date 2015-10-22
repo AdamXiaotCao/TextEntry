@@ -14,6 +14,16 @@ String currentPhrase = ""; //the current target phrase
 String currentTyped = ""; //what the user has typed so far
 final float centerX = 157.5;//320 * 480
 final float centerY = 77.5;
+final float keyBoardCenterX = centerX + 10;
+final float keyBoardCenterY = centerY + 10;
+final float nextButtonX = 350;
+final float nextButtonY = 70;
+final float nextButtonSize = 100;
+final String[] characters  = {"<-", "abc","def","ghi","jkl","mno","pqrs","tuv","wxyz"};
+final float targetX = 70;
+final float targetY = 50;
+final float enteredX = 70;
+final float enteredY = 70;
 final int DPIofYourDeviceScreen = 165; //you will need to look up the DPI or PPI of your device to make sure you get the right scale!!
                                       //http://en.wikipedia.org/wiki/List_of_displays_by_pixel_density
 final float sizeOfInputArea = DPIofYourDeviceScreen*1; //aka, 1.0 inches square!
@@ -26,7 +36,7 @@ void setup()
 {
   phrases = loadStrings("phrases2.txt"); //load the phrase set into memory
   Collections.shuffle(Arrays.asList(phrases)); //randomize the order of the phrases
-    
+
   orientation(LANDSCAPE); //can also be LANDSCAPE -- sets orientation on android device
   size(1000, 1000); //Sets the size of the app. You may want to modify this to your device. Many phones today are 1080 wide by 1920 tall.
   textFont(createFont("Arial", 16)); //set the font to arial 24
@@ -46,7 +56,7 @@ void draw()
   {
     fill(255);
     textAlign(CENTER);
-    text("Finished", 280, 150);
+    text("Finished", centerX, centerY);
     return;
   }
 
@@ -54,7 +64,7 @@ void draw()
   {
     fill(255);
     textAlign(CENTER);
-    text("Click to start time!", 280, 150); //display this messsage until the user clicks!
+    text("Click to start time!", centerX, centerY); //display this messsage until the user clicks!
   }
 
   if (startTime==0 & mousePressed)
@@ -69,23 +79,36 @@ void draw()
     fill(128);
     text("Phrase " + (currTrialNum+1) + " of " + totalTrialNum, 70, 20); //draw the trial count
     fill(255);
-    text("Target:   " + currentPhrase, 70, 50); //draw the target string
-    text("Entered:  " + currentTyped, 70, 70); //draw what the user has entered thus far 
+    text("Target:   " + currentPhrase, targetX, targetY); //draw the target string
+    text("Entered:  " + currentTyped, enteredX, enteredY); //draw what the user has entered thus far
     fill(255, 0, 0);
-    rect(330, 00, 100, 100); //drag next button
+    rect(nextButtonX, nextButtonY, nextButtonSize, nextButtonSize/2); //drag next button
     fill(255);
-    text("NEXT > ", 350, 50); //draw next label
+    text("NEXT > ", nextButtonX + 20, nextButtonY + 20); //draw next label
 
 
     //my draw code
     textAlign(CENTER);
-    text("" + currentLetter, 200+sizeOfInputArea/2, 200+sizeOfInputArea/3); //draw current letter
-    fill(255, 0, 0);
-    rect(200, 200+sizeOfInputArea/2, sizeOfInputArea/2, sizeOfInputArea/2); //draw left red button
-    fill(0, 255, 0);
-    rect(200+sizeOfInputArea/2, 200+sizeOfInputArea/2, sizeOfInputArea/2, sizeOfInputArea/2); //draw right green button
+    float offSet = sizeOfInputArea/6;
+    text("<-", centerX + offSet, centerY + offSet); //draw current letter
+    // text("<-" + currentLetter, centerX + offSet, centerY + offSet); //draw current letter
+    // fill(255, 255, 204);
+
+    //drawing the 9*9 grid
+    int count = 0;
+    for (int j = 0; j < 3; j ++){
+      for (int i = 0; i < 3; i ++){
+        fill(255, 255, 204);
+        rect(keyBoardCenterX + (sizeOfInputArea / 3 ) * i, keyBoardCenterY + (sizeOfInputArea/3) * j, sizeOfInputArea/3-10, sizeOfInputArea/3-10); //draw left red button
+        fill(0,0,0);
+        text(characters[count], keyBoardCenterX + (sizeOfInputArea / 3 ) * i + sizeOfInputArea/6, keyBoardCenterY + (sizeOfInputArea/3) * j + sizeOfInputArea/6);
+        count++;
+      }
+    }
+    // fill(0, 255, 0);
+    // rect(200+sizeOfInputArea/2, 200+sizeOfInputArea/2, sizeOfInputArea/2, sizeOfInputArea/2); //draw right green button
   }
-  
+
 }
 
 boolean didMouseClick(float x, float y, float w, float h) //simple function to do hit testing
