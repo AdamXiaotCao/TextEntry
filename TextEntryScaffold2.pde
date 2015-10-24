@@ -1,5 +1,6 @@
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.ArrayList;
 
 String[] phrases; //contains all of the phrases
 int totalTrialNum = 4; //the total number of phrases to be tested - set this low for testing. Might be ~10 for the real bakeoff!
@@ -14,33 +15,82 @@ String currentPhrase = ""; //the current target phrase
 String currentTyped = ""; //what the user has typed so far
 final float centerX = 157.5;//320 * 480
 final float centerY = 77.5;
-final float keyBoardCenterX = centerX + 10;
-final float keyBoardCenterY = centerY + 10;
+final float keyBoardCenterX = centerX;
+final float keyBoardCenterY = centerY;
 final float nextButtonX = 350;
 final float nextButtonY = 70;
 final float nextButtonSize = 100;
-final String[] characters  = {"<-", "abc","def","ghi","jkl","mno","pqrs","tuv","wxyz"};
+final String[] characters  = {"␣ <-", "abc","def","ghi","jkl","mno","pqrs","tuv","wxyz"};
 final float targetX = 70;
 final float targetY = 50;
 final float enteredX = 70;
 final float enteredY = 70;
+
 final int DPIofYourDeviceScreen = 165; //you will need to look up the DPI or PPI of your device to make sure you get the right scale!!
                                       //http://en.wikipedia.org/wiki/List_of_displays_by_pixel_density
 final float sizeOfInputArea = DPIofYourDeviceScreen*1; //aka, 1.0 inches square!
-
+boolean released = false;
 //Variables for my silly implementation. You can delete this:
 char currentLetter = 'a';
+class Button{
+  float buttonX;
+  float buttonY;
+  float buttonWidth;
+  float buttonHeight;
+  char[] cs;
+  boolean currentButton = false;
+  public Button(float buttonX, float buttonY, float buttonWidth, float buttonHeight, char[] cs){
+    this.buttonX = buttonX;
+    this.buttonY = buttonY;
+    this.buttonWidth = buttonWidth;
+    this.buttonHeight = buttonHeight;
+    this.cs = cs;
+  }
+}
+class CButton{
+  float buttonX;
+  float buttonY;
+  float buttonWidth;
+  float buttonHeight;
+  String character;
+  boolean currentButton = false;
+  public CButton(float buttonX, float buttonY, float buttonWidth, float buttonHeight, String character){
+    this.buttonX = buttonX;
+    this.buttonY = buttonY;
+    this.buttonWidth = buttonWidth;
+    this.buttonHeight = buttonHeight;
+    this.character = character;
+  }
+}
+ArrayList<Button> buttons;
+ArrayList<CButton> cButtons;
 
 //You can modify anything in here. This is just a basic implementation.
 void setup()
 {
   phrases = loadStrings("phrases2.txt"); //load the phrase set into memory
   Collections.shuffle(Arrays.asList(phrases)); //randomize the order of the phrases
-
+  buttons = new ArrayList<Button>();
+  cButtons = new ArrayList<CButton>();
   orientation(LANDSCAPE); //can also be LANDSCAPE -- sets orientation on android device
   size(1000, 1000); //Sets the size of the app. You may want to modify this to your device. Many phones today are 1080 wide by 1920 tall.
   textFont(createFont("Arial", 16)); //set the font to arial 24
   noStroke(); //my code doesn't use any strokes.
+  int count = 0;
+  for (int j = 0; j < 3; j ++){
+    for (int i = 0; i < 3; i ++){
+        String chars = characters[count];
+        char[] cs = chars.toCharArray();
+        buttons.add(new Button(keyBoardCenterX + (sizeOfInputArea / 3 ) * i, keyBoardCenterY + (sizeOfInputArea/3) * j, sizeOfInputArea/3, sizeOfInputArea/3, cs));
+        count++;
+    }
+  }
+  for (int i = 0; i < 3; i++){
+    cButtons.add(new CButton(keyBoardCenterX + (sizeOfInputArea/3) * i), keyBoardCenterY+ (sizeOfInputArea/3), sizeOfInputArea/3, sizeOfInputArea/3));
+
+  }
+  //manually put one extra button below those three just in case
+  cButtons.add(new CButton(keyBoardCenterX + (sizeOfInputArea/3), keyBoardCenterY + (sizeOfInputArea /3 ), sizeOfInputArea/3, sizeOfInputArea/3));
 }
 
 //You can modify anything in here. This is just a basic implementation.
@@ -81,32 +131,46 @@ void draw()
     fill(255);
     text("Target:   " + currentPhrase, targetX, targetY); //draw the target string
     text("Entered:  " + currentTyped, enteredX, enteredY); //draw what the user has entered thus far
-    fill(255, 0, 0);
+    fill(124,252,0);
     rect(nextButtonX, nextButtonY, nextButtonSize, nextButtonSize/2); //drag next button
-    fill(255);
+    fill(0);
     text("NEXT > ", nextButtonX + 20, nextButtonY + 20); //draw next label
+    fill(169,169,169);
+    rect(nextButtonX, nextButtonY + nextButtonSize, nextButtonSize, nextButtonSize/2);
+    fill(255);
+    text("PREV < ", nextButtonX + 20, nextButtonY + nextButtonSize + 20);
+
 
 
     //my draw code
-    textAlign(CENTER);
-    float offSet = sizeOfInputArea/6;
-    text("<-", centerX + offSet, centerY + offSet); //draw current letter
+    // textAlign(CENTER);
+    // float offSet = sizeOfInputArea/6;
+    // text("␣ <-", centerX + offSet, centerY + offSet); //draw current letter
     // text("<-" + currentLetter, centerX + offSet, centerY + offSet); //draw current letter
     // fill(255, 255, 204);
 
     //drawing the 9*9 grid
-    int count = 0;
-    for (int j = 0; j < 3; j ++){
-      for (int i = 0; i < 3; i ++){
+    if (released){
+      for (CButton b : cButtons){
         fill(255, 255, 204);
-        rect(keyBoardCenterX + (sizeOfInputArea / 3 ) * i, keyBoardCenterY + (sizeOfInputArea/3) * j, sizeOfInputArea/3-10, sizeOfInputArea/3-10); //draw left red button
-        fill(0,0,0);
-        text(characters[count], keyBoardCenterX + (sizeOfInputArea / 3 ) * i + sizeOfInputArea/6, keyBoardCenterY + (sizeOfInputArea/3) * j + sizeOfInputArea/6);
-        count++;
+        rect(b.buttonX, b.buttonY, b.buttonWidth, b.buttonHeight);
+        fill(0);
+        text(b.character, b.buttonX + sizeOfInputArea/6, b.buttonY + sizeOfInputArea/6);
+      }
+    }else{
+      for (Button b : buttons){
+          if (!b.currentButton){
+            fill(255, 255, 204);
+          }else{
+            fill(127,255,0);
+          }
+          rect(b.buttonX, b.buttonY, b.buttonWidth, b.buttonHeight); //draw left red button
+          fill(0,0,0);
+          text(new String(b.cs),b.buttonX + sizeOfInputArea/6, b.buttonY + sizeOfInputArea/6);
       }
     }
     // fill(0, 255, 0);
-    // rect(200+sizeOfInputArea/2, 200+sizeOfInputArea/2, sizeOfInputArea/2, sizeOfInputArea/2); //draw right green button
+    // rect(200+sizeOfInp utArea/2, 200+sizeOfInputArea/2, sizeOfInputArea/2, sizeOfInputArea/2); //draw right green button
   }
 
 }
@@ -117,37 +181,59 @@ boolean didMouseClick(float x, float y, float w, float h) //simple function to d
 }
 
 
-void mousePressed()
+void mouseDragged()
 {
 
-  if (didMouseClick(200, 200+sizeOfInputArea/2, sizeOfInputArea/2, sizeOfInputArea/2)) //check if click in left button
-  {
-    currentLetter --;
-    if (currentLetter<'_') //wrap around to z
-      currentLetter = 'z';
+  for (Button b : buttons){
+    if (didMouseClick(b.buttonX, b.buttonY, b.buttonWidth, b.buttonHeight)){
+      b.currentButton = true;
+    }else{
+        // fill(255, 255, 204);
+        // rect(b.buttonX,b.buttonY,b.buttonWidth,b.buttonHeight);
+      b.currentButton = false;
+    }
   }
-
-  if (didMouseClick(200+sizeOfInputArea/2, 200+sizeOfInputArea/2, sizeOfInputArea/2, sizeOfInputArea/2)) //check if click in right button
-  {
-    currentLetter ++;
-    if (currentLetter>'z') //wrap back to space (aka underscore)
-      currentLetter = '_';
-  }
-
-  if (didMouseClick(200, 200, sizeOfInputArea, sizeOfInputArea/2)) //check if click occured in letter area
-  {
-    if (currentLetter=='_') //if underscore, consider that a space bar
-      currentTyped+=" ";
-    else if (currentLetter=='`' & currentTyped.length()>0) //if `, treat that as a delete command
-      currentTyped = currentTyped.substring(0, currentTyped.length()-1);
-    else if (currentLetter!='`') //if not any of the above cases, add the current letter to the typed string
-      currentTyped+=currentLetter;
-  }
+  // if (didMouseClick(200, 200+sizeOfInputArea/2, sizeOfInputArea/2, sizeOfInputArea/2)) //check if click in left button
+  // {
+  //   currentLetter --;
+  //   if (currentLetter<'_') //wrap around to z
+  //     currentLetter = 'z';
+  // }
+  //
+  // if (didMouseClick(200+sizeOfInputArea/2, 200+sizeOfInputArea/2, sizeOfInputArea/2, sizeOfInputArea/2)) //check if click in right button
+  // {
+  //   currentLetter ++;
+  //   if (currentLetter>'z') //wrap back to space (aka underscore)
+  //     currentLetter = '_';
+  // }
+  //
+  // if (didMouseClick(200, 200, sizeOfInputArea, sizeOfInputArea/2)) //check if click occured in letter area
+  // {
+  //   if (currentLetter=='_') //if underscore, consider that a space bar
+  //     currentTyped+=" ";
+  //   else if (currentLetter=='`' & currentTyped.length()>0) //if `, treat that as a delete command
+  //     currentTyped = currentTyped.substring(0, currentTyped.length()-1);
+  //   else if (currentLetter!='`') //if not any of the above cases, add the current letter to the typed string
+  //     currentTyped+=currentLetter;
+  // }
 
   //You are allowed to have a next button outside the 2" area
-  if (didMouseClick(800, 00, 200, 200)) //check if click is in next button
+}
+void mousePressed(){
+  if (didMouseClick(nextButtonX, nextButtonY, nextButtonX + nextButtonSize, nextButtonY + nextButtonSize/2)) //check if click is in next button
   {
     nextTrial(); //if so, advance to next trial
+  }
+
+}
+void mouseReleased(){
+  for (Button b: button){
+    if(b.currentButton){
+      released = true;
+
+      b.currentButton = false;
+    }
+
   }
 }
 
