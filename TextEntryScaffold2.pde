@@ -29,7 +29,7 @@ final float enteredY = 70;
 final int DPIofYourDeviceScreen = 165; //you will need to look up the DPI or PPI of your device to make sure you get the right scale!!
                                       //http://en.wikipedia.org/wiki/List_of_displays_by_pixel_density
 final float sizeOfInputArea = DPIofYourDeviceScreen*1; //aka, 1.0 inches square!
-boolean released = false;
+boolean selectCharacter = false;
 //Variables for my silly implementation. You can delete this:
 char currentLetter = 'a';
 class Button{
@@ -37,9 +37,9 @@ class Button{
   float buttonY;
   float buttonWidth;
   float buttonHeight;
-  char[] cs;
+  String cs;
   boolean currentButton = false;
-  public Button(float buttonX, float buttonY, float buttonWidth, float buttonHeight, char[] cs){
+  public Button(float buttonX, float buttonY, float buttonWidth, float buttonHeight, String cs){
     this.buttonX = buttonX;
     this.buttonY = buttonY;
     this.buttonWidth = buttonWidth;
@@ -47,31 +47,15 @@ class Button{
     this.cs = cs;
   }
 }
-class CButton{
-  float buttonX;
-  float buttonY;
-  float buttonWidth;
-  float buttonHeight;
-  String character;
-  boolean currentButton = false;
-  public CButton(float buttonX, float buttonY, float buttonWidth, float buttonHeight, String character){
-    this.buttonX = buttonX;
-    this.buttonY = buttonY;
-    this.buttonWidth = buttonWidth;
-    this.buttonHeight = buttonHeight;
-    this.character = character;
-  }
-}
 ArrayList<Button> buttons;
-ArrayList<CButton> cButtons;
-
+ArrayList<Button> cButtons
 //You can modify anything in here. This is just a basic implementation.
 void setup()
 {
   phrases = loadStrings("phrases2.txt"); //load the phrase set into memory
   Collections.shuffle(Arrays.asList(phrases)); //randomize the order of the phrases
   buttons = new ArrayList<Button>();
-  cButtons = new ArrayList<CButton>();
+  cButtons = new ArrayList<Button>();
   orientation(LANDSCAPE); //can also be LANDSCAPE -- sets orientation on android device
   size(1000, 1000); //Sets the size of the app. You may want to modify this to your device. Many phones today are 1080 wide by 1920 tall.
   textFont(createFont("Arial", 16)); //set the font to arial 24
@@ -80,14 +64,12 @@ void setup()
   for (int j = 0; j < 3; j ++){
     for (int i = 0; i < 3; i ++){
         String chars = characters[count];
-        char[] cs = chars.toCharArray();
-        buttons.add(new Button(keyBoardCenterX + (sizeOfInputArea / 3 ) * i, keyBoardCenterY + (sizeOfInputArea/3) * j, sizeOfInputArea/3, sizeOfInputArea/3, cs));
+        buttons.add(new Button(keyBoardCenterX + (sizeOfInputArea / 3 ) * i, keyBoardCenterY + (sizeOfInputArea/3) * j, sizeOfInputArea/3, sizeOfInputArea/3, chars));
         count++;
     }
   }
   for (int i = 0; i < 3; i++){
-    cButtons.add(new CButton(keyBoardCenterX + (sizeOfInputArea/3) * i), keyBoardCenterY+ (sizeOfInputArea/3), sizeOfInputArea/3, sizeOfInputArea/3));
-
+    cButtons.add(new Button(keyBoardCenterX + (sizeOfInputArea/3) * i), keyBoardCenterY+ (sizeOfInputArea/3), sizeOfInputArea/3, sizeOfInputArea/3, ""));
   }
   //manually put one extra button below those three just in case
   cButtons.add(new CButton(keyBoardCenterX + (sizeOfInputArea/3), keyBoardCenterY + (sizeOfInputArea /3 ), sizeOfInputArea/3, sizeOfInputArea/3));
@@ -140,17 +122,8 @@ void draw()
     fill(255);
     text("PREV < ", nextButtonX + 20, nextButtonY + nextButtonSize + 20);
 
-
-
-    //my draw code
-    // textAlign(CENTER);
-    // float offSet = sizeOfInputArea/6;
-    // text("␣ <-", centerX + offSet, centerY + offSet); //draw current letter
-    // text("<-" + currentLetter, centerX + offSet, centerY + offSet); //draw current letter
-    // fill(255, 255, 204);
-
     //drawing the 9*9 grid
-    if (released){
+    if (selectCharacter){
       for (CButton b : cButtons){
         fill(255, 255, 204);
         rect(b.buttonX, b.buttonY, b.buttonWidth, b.buttonHeight);
@@ -166,7 +139,7 @@ void draw()
           }
           rect(b.buttonX, b.buttonY, b.buttonWidth, b.buttonHeight); //draw left red button
           fill(0,0,0);
-          text(new String(b.cs),b.buttonX + sizeOfInputArea/6, b.buttonY + sizeOfInputArea/6);
+          text(b.cs,b.buttonX + sizeOfInputArea/6, b.buttonY + sizeOfInputArea/6);
       }
     }
     // fill(0, 255, 0);
@@ -183,6 +156,11 @@ boolean didMouseClick(float x, float y, float w, float h) //simple function to d
 
 void mouseDragged()
 {
+  if()
+  //need two stages
+  //if in characterSelection mode,
+  //display three-four button based on which one is selection
+  //else
 
   for (Button b : buttons){
     if (didMouseClick(b.buttonX, b.buttonY, b.buttonWidth, b.buttonHeight)){
@@ -227,9 +205,13 @@ void mousePressed(){
 
 }
 void mouseReleased(){
+  //need two stages
+  //if in characterSelection mode,
+  //add character to the
+
   for (Button b: button){
     if(b.currentButton){
-      released = true;
+      selectCharacter = true;
 
       b.currentButton = false;
     }
