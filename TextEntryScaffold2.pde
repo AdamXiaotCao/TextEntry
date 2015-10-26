@@ -20,13 +20,15 @@ final float keyBoardCenterY = centerY;
 final float nextButtonX = 350;
 final float nextButtonY = 70;
 final float nextButtonSize = 100;
-final String[] characters  = {"␣ <-", "abc","def","ghi","jkl","mno","pqrs","tuv","wxyz"};
+final String[] characters  = {"␣ DEL", "abc","def","ghi","jkl","mno","pqrs","tuv","wxyz"};
 final float targetX = 70;
 final float targetY = 50;
 final float enteredX = 70;
 final float enteredY = 70;
+boolean gameStarted = false;
 
 final int DPIofYourDeviceScreen = 165; //you will need to look up the DPI or PPI of your device to make sure you get the right scale!!
+char[] currentChars = new char[4];
                                       //http://en.wikipedia.org/wiki/List_of_displays_by_pixel_density
 final float sizeOfInputArea = DPIofYourDeviceScreen*1; //aka, 1.0 inches square!
 boolean selectCharacter = false;
@@ -48,7 +50,7 @@ class Button{
   }
 }
 ArrayList<Button> buttons;
-ArrayList<Button> cButtons
+ArrayList<Button> cButtons;
 //You can modify anything in here. This is just a basic implementation.
 void setup()
 {
@@ -69,10 +71,11 @@ void setup()
     }
   }
   for (int i = 0; i < 3; i++){
-    cButtons.add(new Button(keyBoardCenterX + (sizeOfInputArea/3) * i), keyBoardCenterY+ (sizeOfInputArea/3), sizeOfInputArea/3, sizeOfInputArea/3, ""));
+    cButtons.add(new Button(keyBoardCenterX + (sizeOfInputArea/3) * i, keyBoardCenterY+ (sizeOfInputArea/3), sizeOfInputArea/3, sizeOfInputArea/3, ""));
   }
   //manually put one extra button below those three just in case
-  cButtons.add(new CButton(keyBoardCenterX + (sizeOfInputArea/3), keyBoardCenterY + (sizeOfInputArea /3 ), sizeOfInputArea/3, sizeOfInputArea/3));
+  cButtons.add(new Button(keyBoardCenterX + (sizeOfInputArea/3), keyBoardCenterY + (sizeOfInputArea /3 ), sizeOfInputArea/3, sizeOfInputArea/3,""));
+  //TODO add auto completion
 }
 
 //You can modify anything in here. This is just a basic implementation.
@@ -122,15 +125,19 @@ void draw()
     fill(255);
     text("PREV < ", nextButtonX + 20, nextButtonY + nextButtonSize + 20);
 
-    //drawing the 9*9 grid
     if (selectCharacter){
-      for (CButton b : cButtons){
+      // draw 3*1 + 1 grid
+      for (int i = 0; i < cButtons.size(); i++){
+
+        Button b = cButtons.get(i);
         fill(255, 255, 204);
         rect(b.buttonX, b.buttonY, b.buttonWidth, b.buttonHeight);
         fill(0);
-        text(b.character, b.buttonX + sizeOfInputArea/6, b.buttonY + sizeOfInputArea/6);
+        text(b.cs, b.buttonX + sizeOfInputArea/6, b.buttonY + sizeOfInputArea/6);
       }
     }else{
+
+    //drawing the 9*9 grid
       for (Button b : buttons){
           if (!b.currentButton){
             fill(255, 255, 204);
@@ -156,7 +163,7 @@ boolean didMouseClick(float x, float y, float w, float h) //simple function to d
 
 void mouseDragged()
 {
-  if()
+  // if()
   //need two stages
   //if in characterSelection mode,
   //display three-four button based on which one is selection
@@ -208,14 +215,37 @@ void mouseReleased(){
   //need two stages
   //if in characterSelection mode,
   //add character to the
+  // if(selectCharacter){
+  //
+  // }else{
+  //   //need to tell cbuttons the characters for each of them
+  // }
+  if (startTime!= 0){
+    if(selectCharacter){
+      selectCharacter = false;
+      //update the current phrase;
+      //add the input
+      //need to work on the auto complete
+      for (Button b : cButtons){
+        if(b.currentButton){
+          String c = b.cs;
+          // if (c)
 
-  for (Button b: button){
-    if(b.currentButton){
-      selectCharacter = true;
+        }
+      }
 
-      b.currentButton = false;
+    }else{
+      for (Button b: buttons){
+        if(b.currentButton){
+          if(b.cs.equals("DEL")){
+            currentTyped = currentTyped.substring(0,currentTyped.length()-1);
+          }else{
+            selectCharacter = true;
+          }
+          b.currentButton = false;
+        }
+      }
     }
-
   }
 }
 
@@ -272,7 +302,10 @@ void nextTrial()
   currentPhrase = phrases[currTrialNum]; // load the next phrase!
   //currentPhrase = "abc"; // uncomment this to override the test phrase (useful for debugging)
 }
-
+// //TODO
+// prevTrial(){
+//
+// }
 
 
 
