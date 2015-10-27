@@ -25,7 +25,6 @@ final float targetX = 70;
 final float targetY = 50;
 final float enteredX = 70;
 final float enteredY = 70;
-boolean gameStarted = false;
 
 final int DPIofYourDeviceScreen = 165; //you will need to look up the DPI or PPI of your device to make sure you get the right scale!!
 char[] currentChars = new char[4];
@@ -74,7 +73,7 @@ void setup()
     cButtons.add(new Button(keyBoardCenterX + (sizeOfInputArea/3) * i, keyBoardCenterY+ (sizeOfInputArea/3), sizeOfInputArea/3, sizeOfInputArea/3, ""));
   }
   //manually put one extra button below those three just in case
-  cButtons.add(new Button(keyBoardCenterX + (sizeOfInputArea/3), keyBoardCenterY + (sizeOfInputArea /3 ), sizeOfInputArea/3, sizeOfInputArea/3,""));
+  cButtons.add(new Button(keyBoardCenterX + (sizeOfInputArea/3), keyBoardCenterY + 2*(sizeOfInputArea /3 ), sizeOfInputArea/3, sizeOfInputArea/3,""));
   //TODO add auto completion
 }
 
@@ -115,7 +114,7 @@ void draw()
     text("Phrase " + (currTrialNum+1) + " of " + totalTrialNum, 70, 20); //draw the trial count
     fill(255);
     text("Target:   " + currentPhrase, targetX, targetY); //draw the target string
-    text("Entered:  " + currentTyped, enteredX, enteredY); //draw what the user has entered thus far
+    text("Entered:  " + currentTyped + "_", enteredX, enteredY); //draw what the user has entered thus far
     fill(124,252,0);
     rect(nextButtonX, nextButtonY, nextButtonSize, nextButtonSize/2); //drag next button
     fill(0);
@@ -130,7 +129,11 @@ void draw()
       for (int i = 0; i < cButtons.size(); i++){
 
         Button b = cButtons.get(i);
-        fill(255, 255, 204);
+        if(!b.currentButton){
+          fill(255, 255, 204);
+        }else{
+          fill(127,255,0);
+        }
         rect(b.buttonX, b.buttonY, b.buttonWidth, b.buttonHeight);
         fill(0);
         text(b.cs, b.buttonX + sizeOfInputArea/6, b.buttonY + sizeOfInputArea/6);
@@ -146,7 +149,8 @@ void draw()
           }
           rect(b.buttonX, b.buttonY, b.buttonWidth, b.buttonHeight); //draw left red button
           fill(0,0,0);
-          text(b.cs,b.buttonX + sizeOfInputArea/6, b.buttonY + sizeOfInputArea/6);
+          textAlign(LEFT);
+          text(b.cs,b.buttonX + sizeOfInputArea/6 - 13, b.buttonY + sizeOfInputArea/6);
       }
     }
     // fill(0, 255, 0);
@@ -168,16 +172,31 @@ void mouseDragged()
   //if in characterSelection mode,
   //display three-four button based on which one is selection
   //else
-
-  for (Button b : buttons){
-    if (didMouseClick(b.buttonX, b.buttonY, b.buttonWidth, b.buttonHeight)){
-      b.currentButton = true;
-    }else{
-        // fill(255, 255, 204);
-        // rect(b.buttonX,b.buttonY,b.buttonWidth,b.buttonHeight);
-      b.currentButton = false;
+  if(selectCharacter){
+    //update character button
+    for (Button cb: cButtons){
+      if (didMouseClick(cb.buttonX, cb.buttonY, cb.buttonWidth, cb.buttonHeight)){
+        cb.currentButton = true;
+      }else{
+          // fill(255, 255, 204);
+          // rect(b.buttonX,b.buttonY,b.buttonWidth,b.buttonHeight);
+        cb.currentButton = false;
+      }
     }
+  }else{
+    //update number pad button
+    for (Button b : buttons){
+      if (didMouseClick(b.buttonX, b.buttonY, b.buttonWidth, b.buttonHeight)){
+        b.currentButton = true;
+      }else{
+          // fill(255, 255, 204);
+          // rect(b.buttonX,b.buttonY,b.buttonWidth,b.buttonHeight);
+        b.currentButton = false;
+      }
+    }
+
   }
+
   // if (didMouseClick(200, 200+sizeOfInputArea/2, sizeOfInputArea/2, sizeOfInputArea/2)) //check if click in left button
   // {
   //   currentLetter --;
@@ -207,7 +226,10 @@ void mouseDragged()
 void mousePressed(){
   if (didMouseClick(nextButtonX, nextButtonY, nextButtonX + nextButtonSize, nextButtonY + nextButtonSize/2)) //check if click is in next button
   {
+    currentTyped = currentTyped.substring(0, currentTyped.length()-1); //remove the cursor
+
     nextTrial(); //if so, advance to next trial
+    currentTyped = "_";
   }
 
 }
@@ -228,21 +250,40 @@ void mouseReleased(){
       //need to work on the auto complete
       for (Button b : cButtons){
         if(b.currentButton){
-          String c = b.cs;
-          // if (c)
-
+          if(b.cs.equals("␣")){
+            currentTyped += " ";
+          }else if (b.cs.equals("DEL")){
+            currentTyped = currentTyped.substring(0, currentTyped.length()-1);
+          }else{
+            String c = b.cs;
+            currentTyped += c;
+          }
         }
       }
 
     }else{
       for (Button b: buttons){
         if(b.currentButton){
-          if(b.cs.equals("DEL")){
-            currentTyped = currentTyped.substring(0,currentTyped.length()-1);
-          }else{
-            selectCharacter = true;
-          }
+          selectCharacter = true;
           b.currentButton = false;
+          if(b.cs.equals("␣ DEL")){
+            cButtons.get(0).cs = "␣";
+            cButtons.get(1).cs = "DEL";
+            cButtons.get(2).cs = "";
+            cButtons.get(3).cs = "";
+          }else{
+            char[] chars = b.cs.toCharArray();
+            //prepare the cbuttons
+            for(int i = 0; i < chars.length; i++){
+              Button cb = cButtons.get(i);
+              cb.cs = String.valueOf(chars[i]);
+            }
+            if (chars.length < cButtons.size()){
+              for (int i = chars.length; i< cButtons.size(); i++){
+                cButtons.get(i).cs = "";
+              }
+            }
+          }
         }
       }
     }
