@@ -149,8 +149,8 @@ void draw()
           }
           rect(b.buttonX, b.buttonY, b.buttonWidth, b.buttonHeight); //draw left red button
           fill(0,0,0);
-          textAlign(LEFT);
-          text(b.cs,b.buttonX + sizeOfInputArea/6 - 13, b.buttonY + sizeOfInputArea/6);
+          textAlign(CENTER);
+          text(b.cs,b.buttonX + sizeOfInputArea/6 - 7, b.buttonY + sizeOfInputArea/6);
       }
     }
     // fill(0, 255, 0);
