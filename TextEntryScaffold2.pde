@@ -196,40 +196,11 @@ void mouseDragged()
     }
 
   }
-
-  // if (didMouseClick(200, 200+sizeOfInputArea/2, sizeOfInputArea/2, sizeOfInputArea/2)) //check if click in left button
-  // {
-  //   currentLetter --;
-  //   if (currentLetter<'_') //wrap around to z
-  //     currentLetter = 'z';
-  // }
-  //
-  // if (didMouseClick(200+sizeOfInputArea/2, 200+sizeOfInputArea/2, sizeOfInputArea/2, sizeOfInputArea/2)) //check if click in right button
-  // {
-  //   currentLetter ++;
-  //   if (currentLetter>'z') //wrap back to space (aka underscore)
-  //     currentLetter = '_';
-  // }
-  //
-  // if (didMouseClick(200, 200, sizeOfInputArea, sizeOfInputArea/2)) //check if click occured in letter area
-  // {
-  //   if (currentLetter=='_') //if underscore, consider that a space bar
-  //     currentTyped+=" ";
-  //   else if (currentLetter=='`' & currentTyped.length()>0) //if `, treat that as a delete command
-  //     currentTyped = currentTyped.substring(0, currentTyped.length()-1);
-  //   else if (currentLetter!='`') //if not any of the above cases, add the current letter to the typed string
-  //     currentTyped+=currentLetter;
-  // }
-
-  //You are allowed to have a next button outside the 2" area
 }
 void mousePressed(){
   if (didMouseClick(nextButtonX, nextButtonY, nextButtonX + nextButtonSize, nextButtonY + nextButtonSize/2)) //check if click is in next button
   {
-    currentTyped = currentTyped.substring(0, currentTyped.length()-1); //remove the cursor
-
     nextTrial(); //if so, advance to next trial
-    currentTyped = "_";
   }
 
 }
@@ -237,11 +208,6 @@ void mouseReleased(){
   //need two stages
   //if in characterSelection mode,
   //add character to the
-  // if(selectCharacter){
-  //
-  // }else{
-  //   //need to tell cbuttons the characters for each of them
-  // }
   if (startTime!= 0){
     if(selectCharacter){
       selectCharacter = false;
