@@ -150,7 +150,7 @@ void draw()
           rect(b.buttonX, b.buttonY, b.buttonWidth, b.buttonHeight); //draw left red button
           fill(0,0,0);
           textAlign(CENTER);
-          text(b.cs,b.buttonX + sizeOfInputArea/6 - 7, b.buttonY + sizeOfInputArea/6);
+          text(b.cs,b.buttonX + sizeOfInputArea/6 - 5, b.buttonY + sizeOfInputArea/6);
       }
     }
     // fill(0, 255, 0);
@@ -250,6 +250,7 @@ void mouseReleased(){
       //need to work on the auto complete
       for (Button b : cButtons){
         if(b.currentButton){
+            b.currentButton = false;
           if(b.cs.equals("␣")){
             currentTyped += " ";
           }else if (b.cs.equals("DEL")){
