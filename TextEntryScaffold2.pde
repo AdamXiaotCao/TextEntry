@@ -146,7 +146,7 @@ void readWords(){
 }
 
 void updateCurrentButton(){
-  if(currentWord.length() > 0){
+  if(currentWord.length() > 1){
     leftSuggestButton.cs = "";
     rightSuggestButton.cs = "";
     Collection<String> suggestted = prefixTrie.autoComplete(currentWord);
@@ -167,9 +167,12 @@ void updateCurrentButton(){
       }
     }
     System.out.println("suggesttedW is "+ suggesttedW);
-  }else{
+  }else if (currentWord.length() == 0){
     leftSuggestButton.cs = "the";
     rightSuggestButton.cs = "of";
+  }else{
+    leftSuggestButton.cs = "";
+    rightSuggestButton.cs = "";
   }
 }
 //You can modify anything in here. This is just a basic implementation.
@@ -365,6 +368,8 @@ void mousePressed(){
   if (didMouseClick(nextButtonX, nextButtonY, nextButtonX + nextButtonSize, nextButtonY + nextButtonSize/2)) //check if click is in next button
   {
     currentWord = "";
+    leftSuggestButton.currentButton = false;
+    rightSuggestButton.currentButton = false;
     nextTrial(); //if so, advance to next trial
   }
 
@@ -479,7 +484,7 @@ void nextTrial()
     System.out.println("Total letters entered: " + lettersEnteredTotal); //output
     System.out.println("Total letters expected: " + lettersExpectedTotal); //output
     System.out.println("Total errors entered: " + errorsTotal); //output
-    System.out.println("WPM: " + (lettersEnteredTotal/5.0f)/((finishTime - startTime)/60000f)); //output
+    System.out.println("WPM: " + (lettersEnteredTotal/5.5f)/((finishTime - startTime)/60000f)); //output
     System.out.println("==================");
     currTrialNum++; //increment by one so this mesage only appears once when all trials are done
     return;
