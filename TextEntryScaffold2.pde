@@ -1,6 +1,6 @@
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.ArrayList;
+import java.util.*;
+import java.util.Map.Entry;
+
 
 String[] phrases; //contains all of the phrases
 int totalTrialNum = 4; //the total number of phrases to be tested - set this low for testing. Might be ~10 for the real bakeoff!
@@ -25,7 +25,7 @@ final float targetX = 70;
 final float targetY = 50;
 final float enteredX = 70;
 final float enteredY = 70;
-
+String currentWord = "";
 final int DPIofYourDeviceScreen = 165; //you will need to look up the DPI or PPI of your device to make sure you get the right scale!!
 char[] currentChars = new char[4];
                                       //http://en.wikipedia.org/wiki/List_of_displays_by_pixel_density
@@ -48,11 +48,137 @@ class Button{
     this.cs = cs;
   }
 }
+//start of trie
+class Trie {
+
+    protected final Map<Character, Trie> children;
+    protected String value;
+    protected boolean terminal = false;
+
+    public Trie() {
+        this(null);
+    }
+
+    private Trie(String value) {
+        this.value = value;
+        children = new HashMap<Character, Trie>();
+    }
+
+    protected void add(char c) {
+        String val;
+        if (this.value == null) {
+            val = Character.toString(c);
+        } else {
+            val = this.value + c;
+        }
+        children.put(c, new Trie(val));
+    }
+
+    public void insert(String word) {
+        if (word == null) {
+            throw new IllegalArgumentException("Cannot add null to a Trie");
+        }
+        Trie node = this;
+        for (char c : word.toCharArray()) {
+            if (!node.children.containsKey(c)) {
+                node.add(c);
+            }
+            node = node.children.get(c);
+        }
+        node.terminal = true;
+    }
+
+    public String find(String word) {
+        Trie node = this;
+        for (char c : word.toCharArray()) {
+            if (!node.children.containsKey(c)) {
+                return "";
+            }
+            node = node.children.get(c);
+        }
+        return node.value;
+    }
+
+    public Collection<String> autoComplete(String prefix) {
+        Trie node = this;
+        for (char c : prefix.toCharArray()) {
+            if (!node.children.containsKey(c)) {
+                return Collections.emptyList();
+            }
+            node = node.children.get(c);
+        }
+        return node.allPrefixes();
+    }
+
+    protected Collection<String> allPrefixes() {
+        List<String> results = new ArrayList<String>();
+        if (this.terminal) {
+            results.add(this.value);
+        }
+        for (Entry<Character, Trie> entry : children.entrySet()) {
+            Trie child = entry.getValue();
+            Collection<String> childPrefixes = child.allPrefixes();
+            results.addAll(childPrefixes);
+        }
+        return results;
+    }
+}
+
+//end of trie
+Button leftSuggestButton;
+Button rightSuggestButton;
 ArrayList<Button> buttons;
 ArrayList<Button> cButtons;
+// ArrayList<String> possibleWords;
+BufferedReader reader;
+Trie prefixTrie;
+void readWords(){
+  reader = createReader("count_1w.txt");
+  String line = null;
+  try{
+    while ((line = reader.readLine()) != null) {
+      String[] splitted = line.split("\\s+");
+      prefixTrie.insert(splitted[0]);
+    }
+  }catch(IOException e){
+    e.printStackTrace();
+  }
+}
+
+void updateCurrentButton(){
+  if(currentWord.length() > 0){
+    leftSuggestButton.cs = "";
+    rightSuggestButton.cs = "";
+    Collection<String> suggestted = prefixTrie.autoComplete(currentWord);
+    Iterator<String> it = suggestted.iterator();
+    String suggesttedW = "";
+    System.out.println("currentword is "+ currentWord);
+    System.out.println("suggested");
+    while(it.hasNext()){
+      suggesttedW = it.next();
+      if(suggesttedW.length() > currentWord.length()){
+        if(leftSuggestButton.cs.equals("")){
+          leftSuggestButton.cs = suggesttedW;
+        }else if (rightSuggestButton.cs.equals("")){
+          rightSuggestButton.cs = suggesttedW;
+        }else{
+          break;
+        }
+      }
+    }
+    System.out.println("suggesttedW is "+ suggesttedW);
+  }else{
+    leftSuggestButton.cs = "the";
+    rightSuggestButton.cs = "of";
+  }
+}
 //You can modify anything in here. This is just a basic implementation.
 void setup()
 {
+  prefixTrie = new Trie();
+  // possibleWords = new ArrayList<String>();
+  readWords();
+  System.out.println("Done with reading words");
   phrases = loadStrings("phrases2.txt"); //load the phrase set into memory
   Collections.shuffle(Arrays.asList(phrases)); //randomize the order of the phrases
   buttons = new ArrayList<Button>();
@@ -62,10 +188,12 @@ void setup()
   textFont(createFont("Arial", 16)); //set the font to arial 24
   noStroke(); //my code doesn't use any strokes.
   int count = 0;
+  leftSuggestButton = new Button(keyBoardCenterX, keyBoardCenterY, sizeOfInputArea/2, sizeOfInputArea/4,"");
+  rightSuggestButton = new Button(keyBoardCenterX+sizeOfInputArea/2, keyBoardCenterY, sizeOfInputArea/2, sizeOfInputArea/4,"");
   for (int j = 0; j < 3; j ++){
     for (int i = 0; i < 3; i ++){
         String chars = characters[count];
-        buttons.add(new Button(keyBoardCenterX + (sizeOfInputArea / 3 ) * i, keyBoardCenterY + (sizeOfInputArea/3) * j, sizeOfInputArea/3, sizeOfInputArea/3, chars));
+        buttons.add(new Button(keyBoardCenterX + (sizeOfInputArea / 3 ) * i, keyBoardCenterY + (sizeOfInputArea/4) * j + sizeOfInputArea/4, sizeOfInputArea/3, sizeOfInputArea/4, chars));
         count++;
     }
   }
@@ -114,15 +242,15 @@ void draw()
     text("Phrase " + (currTrialNum+1) + " of " + totalTrialNum, 70, 20); //draw the trial count
     fill(255);
     text("Target:   " + currentPhrase, targetX, targetY); //draw the target string
-    text("Entered:  " + currentTyped + "_", enteredX, enteredY); //draw what the user has entered thus far
+    text("Entered: " + currentTyped + "_", enteredX, enteredY); //draw what the user has entered thus far
     fill(124,252,0);
     rect(nextButtonX, nextButtonY, nextButtonSize, nextButtonSize/2); //drag next button
     fill(0);
     text("NEXT > ", nextButtonX + 20, nextButtonY + 20); //draw next label
     fill(169,169,169);
     rect(nextButtonX, nextButtonY + nextButtonSize, nextButtonSize, nextButtonSize/2);
-    fill(255);
-    text("PREV < ", nextButtonX + 20, nextButtonY + nextButtonSize + 20);
+    //fill(255);
+    //text("PREV < ", nextButtonX + 20, nextButtonY + nextButtonSize + 20);
 
     if (selectCharacter){
       // draw 3*1 + 1 grid
@@ -141,6 +269,26 @@ void draw()
     }else{
 
     //drawing the 9*9 grid
+      if(!leftSuggestButton.currentButton){
+        fill(255, 255, 204);
+      }else{
+        fill(127,255,0);
+      }
+      rect(leftSuggestButton.buttonX, leftSuggestButton.buttonY, leftSuggestButton.buttonWidth-1, leftSuggestButton.buttonHeight);
+      fill(0);
+      textAlign(CENTER);
+      text(leftSuggestButton.cs, leftSuggestButton.buttonX + 20, leftSuggestButton.buttonY + 20);
+
+      if(!rightSuggestButton.currentButton){
+        fill(255, 255, 204);
+      }else{
+        fill(127,255,0);
+      }
+      rect(rightSuggestButton.buttonX, rightSuggestButton.buttonY, rightSuggestButton.buttonWidth, rightSuggestButton.buttonHeight);
+      fill(0);
+      textAlign(CENTER);
+      text(rightSuggestButton.cs, rightSuggestButton.buttonX + 20, rightSuggestButton.buttonY + 20);
+
       for (Button b : buttons){
           if (!b.currentButton){
             fill(255, 255, 204);
@@ -185,21 +333,38 @@ void mouseDragged()
     }
   }else{
     //update number pad button
-    for (Button b : buttons){
-      if (didMouseClick(b.buttonX, b.buttonY, b.buttonWidth, b.buttonHeight)){
-        b.currentButton = true;
-      }else{
-          // fill(255, 255, 204);
-          // rect(b.buttonX,b.buttonY,b.buttonWidth,b.buttonHeight);
+    if(didMouseClick(leftSuggestButton.buttonX, leftSuggestButton.buttonY, leftSuggestButton.buttonWidth, leftSuggestButton.buttonHeight)){
+      leftSuggestButton.currentButton = true;
+      rightSuggestButton.currentButton = false;
+      for (Button b: buttons){
+        b.currentButton = false;
+      }
+    }else if (didMouseClick(rightSuggestButton.buttonX, rightSuggestButton.buttonY, rightSuggestButton.buttonWidth, rightSuggestButton.buttonHeight)){
+      leftSuggestButton.currentButton = false;
+      rightSuggestButton.currentButton = true;
+      for (Button b: buttons){
         b.currentButton = false;
       }
     }
-
+    else{
+      leftSuggestButton.currentButton = false;
+      rightSuggestButton.currentButton = false;
+      for (Button b : buttons){
+        if (didMouseClick(b.buttonX, b.buttonY, b.buttonWidth, b.buttonHeight)){
+          b.currentButton = true;
+        }else{
+            // fill(255, 255, 204);
+            // rect(b.buttonX,b.buttonY,b.buttonWidth,b.buttonHeight);
+          b.currentButton = false;
+        }
+      }
+    }
   }
 }
 void mousePressed(){
   if (didMouseClick(nextButtonX, nextButtonY, nextButtonX + nextButtonSize, nextButtonY + nextButtonSize/2)) //check if click is in next button
   {
+    currentWord = "";
     nextTrial(); //if so, advance to next trial
   }
 
@@ -219,16 +384,41 @@ void mouseReleased(){
             b.currentButton = false;
           if(b.cs.equals("␣")){
             currentTyped += " ";
+            currentWord = "";
+            updateCurrentButton();
+            //TODO update suggestWord;
           }else if (b.cs.equals("DEL")){
             currentTyped = currentTyped.substring(0, currentTyped.length()-1);
+            String[] currentWords = currentTyped.split("\\s+");
+            if(currentWords.length>0){
+              currentWord = currentWords[currentWords.length-1];
+            }else{
+              currentWord = "";
+            }
+            updateCurrentButton();
+            //TODO update suggestWord
           }else{
             String c = b.cs;
+            currentWord += c;
+            updateCurrentButton();
             currentTyped += c;
           }
         }
       }
 
     }else{
+      if (leftSuggestButton.currentButton && (leftSuggestButton.cs.length() > 0)){
+
+        currentTyped += leftSuggestButton.cs.substring(currentWord.length());
+        currentTyped += " ";
+        currentWord = "";
+        updateCurrentButton();
+      }else if (rightSuggestButton.currentButton && (rightSuggestButton.cs.length() > 0)){
+        currentTyped += rightSuggestButton.cs.substring(currentWord.length());
+        currentTyped += " ";
+        currentWord = "";
+        updateCurrentButton();
+      }
       for (Button b: buttons){
         if(b.currentButton){
           selectCharacter = true;
